@@ -1,11 +1,12 @@
 <script lang="ts">
   // Interactive viewport around <Diagram>: drag to pan, pinch / ctrl+wheel /
-  // +/- to zoom, tap to select. Re-fits when `fitKey` changes (e.g. a new document).
+  // +/- to zoom, tap to select, drag the selected person to move them.
+  // Re-fits when `fitKey` changes (e.g. a new document).
   import type { LayoutResult } from '../layout/types'
   import type { Genogram } from '../model/types'
   import Diagram from './Diagram.svelte'
   import { selectionFromElement, type Selection } from './selection'
-  import { fit, pan, zoomAt, type Viewport } from './viewport'
+  import { centerOn, fit, pan, zoomAt, type Viewport } from './viewport'
 
   interface Props {
     g: Genogram
@@ -15,8 +16,12 @@
     fitKey?: unknown
     /** Show the floating zoom buttons. */
     controls?: boolean
+    /** Called when the selected person is dragged (diagram units). Enables dragging. */
+    onmove?: (id: string, dx: number, dy: number) => void
+    /** Height (px) covered by an overlay at the bottom, e.g. the phone bottom sheet. */
+    insetBottom?: number
   }
-  let { g, res, selected = null, onselect, fitKey, controls = true }: Props = $props()
+  let { g, res, selected = null, onselect, fitKey, controls = true, onmove, insetBottom = 0 }: Props = $props()
 
   let svg: SVGSVGElement
   let width = $state(0)
@@ -29,6 +34,19 @@
 
   export function zoomBy(factor: number) {
     vp = zoomAt(vp, factor, width / 2, height / 2)
+  }
+
+  /** Scroll a person into the visible area (above any bottom overlay) if needed. */
+  export function reveal(id: string) {
+    const b = res.boxes.get(id)
+    if (!b || !width) return
+    const visibleH = Math.max(120, height - insetBottom)
+    const sx = b.cx * vp.k + vp.x
+    const sy = b.cy * vp.k + vp.y
+    const margin = 60
+    if (sx < margin || sx > width - margin || sy < margin || sy > visibleH - margin) {
+      vp = centerOn(vp, b.cx, b.cy, width, visibleH)
+    }
   }
 
   // Fit on first size and whenever fitKey changes.
@@ -46,6 +64,8 @@
   let downAt: { x: number; y: number } | null = null
   let moved = false
   let pinchDist = 0
+  let dragId: string | null = null
+  let drag = $state<{ id: string; dx: number; dy: number } | null>(null)
 
   function local(e: PointerEvent | WheelEvent) {
     const r = svg.getBoundingClientRect()
@@ -59,8 +79,13 @@
     if (pointers.size === 1) {
       downAt = local(e)
       moved = false
+      const hit = selectionFromElement(e.target as Element)
+      dragId =
+        onmove && hit?.kind === 'person' && selected?.kind === 'person' && hit.id === selected.id ? hit.id : null
     } else if (pointers.size === 2) {
       moved = true // a pinch is never a tap
+      dragId = null
+      drag = null
       const [a, b] = [...pointers.values()]
       pinchDist = Math.hypot(a.x - b.x, a.y - b.y)
     }
@@ -74,7 +99,8 @@
 
     if (pointers.size === 1) {
       if (downAt && Math.hypot(p.x - downAt.x, p.y - downAt.y) > TAP_SLOP) moved = true
-      if (moved) vp = pan(vp, p.x - prev.x, p.y - prev.y)
+      if (moved && dragId && downAt) drag = { id: dragId, dx: (p.x - downAt.x) / vp.k, dy: (p.y - downAt.y) / vp.k }
+      else if (moved) vp = pan(vp, p.x - prev.x, p.y - prev.y)
     } else if (pointers.size === 2) {
       const [a, b] = [...pointers.values()]
       const dist = Math.hypot(a.x - b.x, a.y - b.y)
@@ -90,11 +116,15 @@
   function onpointerup(e: PointerEvent) {
     if (!pointers.delete(e.pointerId)) return
     if (pointers.size === 0) {
-      if (!moved) {
+      if (drag) {
+        onmove?.(drag.id, drag.dx, drag.dy)
+        drag = null
+      } else if (!moved) {
         const target = document.elementFromPoint(e.clientX, e.clientY)
         onselect?.(selectionFromElement(target))
       }
       downAt = null
+      dragId = null
     } else if (pointers.size === 1) {
       pinchDist = 0
     }
@@ -157,7 +187,7 @@
   }
 </script>
 
-<div class="canvas" bind:clientWidth={width} bind:clientHeight={height}>
+<div class="canvas" bind:clientWidth={width} bind:clientHeight={height} style:--inset-bottom="{insetBottom}px">
   <!-- Custom widget: pointer gestures plus keyboard pan/zoom/select, so it is focusable and handles events. -->
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions, a11y_no_noninteractive_tabindex -->
   <svg
@@ -172,7 +202,7 @@
     {onkeydown}
   >
     <g transform="translate({vp.x} {vp.y}) scale({vp.k})">
-      <Diagram {g} {res} {selected} />
+      <Diagram {g} {res} {selected} {drag} />
     </g>
   </svg>
   {#if controls}
@@ -210,7 +240,7 @@
   .controls {
     position: absolute;
     right: max(12px, env(safe-area-inset-right));
-    bottom: 12px;
+    bottom: calc(12px + var(--inset-bottom, 0px));
     display: flex;
     flex-direction: column;
     border: 1px solid var(--border);

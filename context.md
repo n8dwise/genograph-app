@@ -73,9 +73,23 @@ Layers only depend downward. Layout must stay free of DOM/Svelte so it's unit-te
     attributes) for per-line colors — class rules override presentation attributes.
   - `e2e/`: Playwright smoke tests (tap, drag, zoom, keyboard, no sideways scroll) on
     desktop + Pixel 7 profiles; run in CI.
-  - App.svelte is still a demo shell (sample picker + selection readout).
-- **Next: Phase 4** — editing UX (tap-person action sheet, bottom sheet/side panel forms,
-  My Genograms home, first-run "who's the client?", drag-to-pin).
+- **Phase 4 (editing UX):** done.
+  - `ui/app.svelte.ts`: `AppState` — wraps Session as Svelte state; hash routes
+    (`#/` home, `#/g/<id>` editor), selection, toasts, file import/export, autosave pref.
+    `App.svelte` syncs session ↔ route *only when the route changes* (untrack) — actions
+    that open docs themselves must not be undone mid-flight.
+  - `ui/Home.svelte`: My Genograms (open/duplicate/delete), first-run "Who's the client?",
+    open file, sample family.
+  - `ui/Editor.svelte`: top bar (back, title, undo/redo, ⋯ menu: save status, autosave
+    toggle, save now, download JSON, reset moved people), canvas, panel = bottom sheet
+    (<900px, canvas told its height via `insetBottom`) or side panel. Ctrl/Cmd-Z/Y.
+    Panels are `{#key}`ed by selection so their local state resets cleanly.
+  - `ui/PersonPanel.svelte` + `AddRelativeForm.svelte`: add parents/parent/partner/child/
+    sibling/support/relationship; live-edited details (coalesced undo); primary subject;
+    remove. `ui/LinePanels.svelte`: partnership / relationship / bond editing.
+  - Drag the *selected* person to move them (stored as a pin); dragging elsewhere pans.
+  - e2e: full build-a-family flow incl. undo/redo and reload persistence; stable over repeats.
+- **Next: Phase 5** — I/O: PNG export (render Diagram to image), JSON guide v2 for AI-assisted entry.
 
 ## Layout conventions (decided in Phase 1)
 - Partner lines are a "U" under the symbols; names sit below that band, so lines never cross names.
