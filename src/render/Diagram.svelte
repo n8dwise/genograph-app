@@ -15,8 +15,10 @@
     g: Genogram
     res: LayoutResult
     selected?: Selection | null
+    /** Person being dragged: drawn offset until the drop re-runs layout. */
+    drag?: { id: string; dx: number; dy: number } | null
   }
-  let { g, res, selected = null }: Props = $props()
+  let { g, res, selected = null, drag = null }: Props = $props()
 
   const partnerships = $derived(new Map(g.partnerships.map(p => [p.id, p])))
   const isSelected = (kind: Selection['kind'], id: string) => selected?.kind === kind && selected.id === id
@@ -124,6 +126,8 @@
           class="person"
           class:support={b.support}
           class:selected={isSelected('person', p.id)}
+          class:dragging={drag?.id === p.id}
+          transform={drag?.id === p.id ? `translate(${drag.dx} ${drag.dy})` : undefined}
           data-kind="person"
           data-id={p.id}
           role="button"
@@ -158,7 +162,7 @@
           {:else if age}
             <text class="age" x={b.cx} y={b.cy} text-anchor="middle" dominant-baseline="central">{age}</text>
           {:else if p.sex === '?'}
-            <text class="age" x={b.cx} y={b.cy} text-anchor="middle" dominant-baseline="central">?</text>
+            <text class="age unknown-mark" x={b.cx} y={b.cy} text-anchor="middle" dominant-baseline="central">?</text>
           {/if}
 
           <text class="name" x={b.cx} y={b.labelY + 11} text-anchor="middle">{truncate(p.name || 'Unnamed', 15)}</text>
@@ -262,7 +266,17 @@
     fill: var(--ink-muted);
   }
 
-  .person:focus-visible {
+  .dragging {
+    opacity: 0.8;
+    cursor: grabbing;
+  }
+
+  .person.selected {
+    cursor: grab;
+  }
+
+  /* Tapping focuses the person; keyboard focus gets the symbol highlight below instead. */
+  .person:focus {
     outline: none;
   }
 

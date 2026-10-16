@@ -9,6 +9,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4175/genograph-app/',
     channel: 'chrome',
+    screenshot: 'only-on-failure',
   },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], channel: 'chrome' } },

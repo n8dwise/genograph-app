@@ -75,3 +75,143 @@ body,
 body {
   overscroll-behavior: none;
 }
+
+/* ── Forms & buttons (shared by all panels) ─────────────────────────────── */
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--select);
+  border-color: var(--select);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-danger {
+  color: var(--quality-conflicted);
+}
+
+.btn-ghost {
+  border-color: transparent;
+  background: none;
+}
+
+.btn-icon {
+  min-width: 44px;
+  padding: 0;
+}
+
+.field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.field > span {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.field input,
+.field select,
+.field textarea {
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  width: 100%;
+}
+
+.field textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.75rem;
+}
+
+.stack {
+  display: grid;
+  gap: 0.875rem;
+}
+
+/* Segmented control: a row of toggle buttons. */
+.seg {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.seg button {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 0.5rem;
+  border: 0;
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.seg button + button {
+  border-left: 1px solid var(--border);
+}
+
+.seg button[aria-pressed='true'] {
+  background: var(--select);
+  color: #fff;
+  font-weight: 600;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+}
+
+.check input {
+  width: 22px;
+  height: 22px;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
