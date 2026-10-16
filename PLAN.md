@@ -1,6 +1,6 @@
 # Genograph v2 — Rebuild Plan
 
-Status: **approved direction** (2026-10-15). Trim/annotate freely — nothing is built yet.
+Status: **approved direction** (2026-10-15). Phases 0–1 done; trim/annotate freely.
 
 ## Goal
 
@@ -130,7 +130,7 @@ Replace "dagre + fix-ups" with a **genogram-specific layout** that encodes the r
 6. **Overlays** — emotional relationships drawn as styled curves on top; bonds/support people placed in a support row below the tree (v1 rule).
 7. **Pins** — apply user offsets last.
 
-If the custom engine stalls, fallback: ELK (`elkjs`) layered layout with partition constraints. Decide after the spike in Phase 1.
+~~If the custom engine stalls, fallback: ELK.~~ **Decided (Phase 1): custom engine.** It converged — 0 crossings on all real samples, ~150 ms for 1000 people. See `context.md` → Layout conventions.
 
 **Test fixtures** (reuse v1 sample files, migrated): `example.json`, `thompson.json`, `british-royals.json`, `benchmark.json` (~1000 people → perf budget: layout < 200 ms). Tests assert invariants: no overlapping boxes, partners on the same row, parents above children, sibling age order, no connector passing through a box.
 

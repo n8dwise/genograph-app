@@ -33,5 +33,31 @@ src/
 Layers only depend downward. Layout must stay free of DOM/Svelte so it's unit-testable.
 
 ## Status
-- **Phase 0 (scaffold):** done locally — app shell, PWA, Vitest, CI/Pages workflow, `model/types.ts`.
-- **Next: Phase 1** — model validation + v1→v2 migration, layout engine against v1 fixtures.
+- **Phase 0 (scaffold):** done.
+- **Phase 1 (model + layout):** done.
+  - `model/`: types, Zod schema + `validateGenogram` (readable errors), `relations.ts`
+    (parents/partners/siblings/half-siblings/aunts derived), `migrate.ts` (v1 app files
+    and the old JointJS person-list format → v2).
+  - `layout/`: custom genogram engine (no dagre/ELK). Pipeline: partner units →
+    generation rows → ordering (sibling blocks in birth order, barycenter sweeps from two
+    starting orders, transpose polish) → x via weighted isotonic regression (PAVA) →
+    support row → pins → connectors. `check.ts` validates drawing rules.
+  - Results: all 4 real samples have 0 crossings and 0 rule violations; ~1000-person
+    benchmark lays out in ~150 ms.
+  - `render/debugSvg.ts` + `App.svelte`: temporary debug viewer (dropdown of samples).
+- **Next: Phase 2** — store (commands, undo/redo, IndexedDB autosave, My Genograms).
+
+## Layout conventions (decided in Phase 1)
+- Partner lines are a "U" under the symbols; names sit below that band, so lines never cross names.
+- Multi-partner: `[former…, person, current…]`; non-adjacent partner lines nest deeper,
+  and each partnership's children hang from their own gap.
+- Single parent: short stub out to the side; implied (off-chart) parents: dotted stub above the sibling bar.
+- Birth order (oldest left) is enforced within each sibling group; someone who married
+  into another sibling group sits with their partner.
+- `family.children` order *is* birth order — the store must keep it sorted.
+- Known gaps: emotional-relationship and bond lines are straight debug lines (Phase 6 curves them);
+  in-law ancestors more than one generation up may get long connectors.
+
+## Debugging layouts
+`npm run dev` → pick a sample. For PNGs: write `debugSvg(...)` output to `.debug/` (git-ignored)
+and screenshot with headless Chrome.
