@@ -94,7 +94,10 @@ Layers only depend downward. Layout must stay free of DOM/Svelte so it's unit-te
 - **Next: Phase 5** — I/O: PNG export (render Diagram to image), JSON guide v2 for AI-assisted entry.
 
 ## Layout conventions (decided in Phase 1)
-- Partner lines are a "U" under the symbols; names sit below that band, so lines never cross names.
+- Names and age sit *inside* the symbols (64px). `render/paths.ts → fitName` word-wraps to two
+  lines using each shape's real width at that height and steps the font 11→9px before truncating.
+  Deceased = small X in the bottom-right corner; unknown sex = small "?" top-right.
+- Partner lines are a "U" under the symbols; the birth–death years line sits below that band.
 - Multi-partner: `[former…, person, current…]`; non-adjacent partner lines nest deeper,
   and each partnership's children hang from their own gap.
 - Single parent: short stub out to the side; implied (off-chart) parents: dotted stub above the sibling bar.

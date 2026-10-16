@@ -175,6 +175,85 @@ export function bondOpacity(q: Quality | undefined): number {
 
 // ── labels ───────────────────────────────────────────────────────────────────
 
+export type SymbolShape = 'square' | 'circle' | 'diamond'
+
+/** Approximate glyph width as a fraction of font size (system UI fonts). */
+const CHAR_W = 0.56
+const FONT_SIZES = [11, 10, 9]
+const MAX_NAME_LINES = 2
+
+export interface FittedName {
+  lines: string[]
+  fontSize: number
+  lineHeight: number
+}
+
+/** Usable text width (px) inside a shape for a line centred `dy` px from the middle. */
+export function usableWidth(shape: SymbolShape, size: number, dy: number, fontSize: number): number {
+  const r = size / 2
+  const edge = Math.abs(dy) + fontSize / 2 // the line's farthest extent from center
+  const pad = 6
+  if (shape === 'square') return size - 2 * pad
+  if (shape === 'circle') return edge >= r ? 0 : 2 * Math.sqrt(r * r - edge * edge) - pad
+  return Math.max(0, size - 2 * edge - pad) // diamond: width shrinks linearly
+}
+
+/**
+ * Fit a name inside a symbol: word-wrap into up to two lines, stepping the font
+ * down (11 → 9px) before truncating with an ellipsis. `extraLines` is the number
+ * of lines below the name (1 when an age is shown).
+ */
+export function fitName(name: string, shape: SymbolShape, size: number, extraLines: number): FittedName {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (!words.length) words.push('Unnamed')
+
+  let best: FittedName | undefined
+  for (const fontSize of FONT_SIZES) {
+    const lineHeight = fontSize + 2
+    // Capacity of each name line, given where it sits vertically.
+    const capacity = (nameLines: number) =>
+      Array.from({ length: nameLines }, (_, i) => {
+        const dy = (i - (nameLines + extraLines - 1) / 2) * lineHeight
+        return Math.floor(usableWidth(shape, size, dy, fontSize) / (fontSize * CHAR_W))
+      })
+
+    for (const nameLines of [1, MAX_NAME_LINES]) {
+      const cap = capacity(nameLines)
+      const lines = wrap(words, cap)
+      if (lines) return { lines, fontSize, lineHeight }
+    }
+    if (fontSize === FONT_SIZES[FONT_SIZES.length - 1]) {
+      const cap = capacity(MAX_NAME_LINES)
+      best = { lines: wrapTruncating(words, cap), fontSize, lineHeight }
+    }
+  }
+  return best!
+}
+
+/** Greedy word wrap into lines with the given capacities; undefined if anything doesn't fit. */
+function wrap(words: string[], cap: number[]): string[] | undefined {
+  const lines: string[] = []
+  let current = ''
+  for (const w of words) {
+    const next = current ? `${current} ${w}` : w
+    if (next.length <= cap[lines.length]) current = next
+    else {
+      if (!current || lines.length + 1 >= cap.length || w.length > cap[lines.length + 1]) return undefined
+      lines.push(current)
+      current = w
+    }
+  }
+  lines.push(current)
+  return lines.length <= cap.length ? lines : undefined
+}
+
+function wrapTruncating(words: string[], cap: number[]): string[] {
+  const first = truncate(words[0], cap[0])
+  if (words.length === 1) return [first]
+  const rest = words.slice(1).join(' ')
+  return [first, truncate(rest, cap[1] ?? cap[0])]
+}
+
 export function truncate(s: string, max: number): string {
   return s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s
 }
@@ -186,13 +265,13 @@ export function yearsLabel(p: { birthYear?: number; deathYear?: number; deceased
   return ''
 }
 
-/** Age shown inside the symbol (living people only). */
+/** Age shown inside the symbol: current age, or age at death when known. */
 export function ageLabel(
-  p: { age?: number; birthYear?: number; deceased?: boolean },
+  p: { age?: number; birthYear?: number; deathYear?: number; deceased?: boolean },
   year = new Date().getFullYear(),
 ): string {
-  if (p.deceased) return ''
   if (p.age !== undefined) return String(p.age)
-  if (p.birthYear !== undefined) return String(year - p.birthYear)
-  return ''
+  if (p.birthYear === undefined) return ''
+  if (p.deceased) return p.deathYear !== undefined ? String(p.deathYear - p.birthYear) : ''
+  return String(year - p.birthYear)
 }

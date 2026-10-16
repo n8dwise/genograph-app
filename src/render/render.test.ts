@@ -4,7 +4,7 @@ import { fixtures } from '../fixtures'
 import { layout } from '../layout'
 import type { FamilyConnector, PartnerLine, PersonBox } from '../layout/types'
 import Diagram from './Diagram.svelte'
-import { ageLabel, curveBetween, identicalTwinBars, statusMarks, yearsLabel } from './paths'
+import { ageLabel, curveBetween, fitName, identicalTwinBars, statusMarks, yearsLabel } from './paths'
 import { fit, toDiagram, zoomAt } from './viewport'
 
 describe('viewport', () => {
@@ -58,10 +58,28 @@ describe('paths', () => {
     expect(identicalTwinBars(f)).toBe('')
   })
 
+  it('fits names inside symbols: wraps words, shrinks, then truncates', () => {
+    const lines = (n: string, shape: 'square' | 'circle' | 'diamond', extra = 1) => fitName(n, shape, 64, extra).lines
+    expect(lines('Alex', 'square')).toEqual(['Alex'])
+    expect(lines('Aunt Lisa', 'circle')).toEqual(['Aunt', 'Lisa'])
+    expect(lines('Harold Thompson', 'square')).toEqual(['Harold', 'Thompson'])
+    // Long single words in circles fit whole (possibly at a smaller size).
+    for (const n of ['Margaret Clark', 'Patricia Wells', 'Catherine Mitchell', 'Jennifer Hayes']) {
+      expect(lines(n, 'circle').join(' ')).toBe(n)
+    }
+    expect(fitName('Catherine Mitchell', 'circle', 64, 1).fontSize).toBeLessThan(11)
+    const long = lines('Bartholomew Montgomery-Smythe Junior', 'circle')
+    expect(long).toHaveLength(2)
+    expect(long.join(' ')).toContain('…')
+    expect(lines('', 'square')).toEqual(['Unnamed'])
+  })
+
   it('formats ages and years', () => {
     expect(ageLabel({ age: 38 })).toBe('38')
     expect(ageLabel({ birthYear: 2000 }, 2026)).toBe('26')
-    expect(ageLabel({ age: 90, deceased: true })).toBe('')
+    expect(ageLabel({ age: 90, deceased: true })).toBe('90') // age at death
+    expect(ageLabel({ birthYear: 1910, deathYear: 1982, deceased: true })).toBe('72')
+    expect(ageLabel({ birthYear: 1910, deceased: true })).toBe('')
     expect(yearsLabel({ birthYear: 1910, deathYear: 1982 })).toBe('1910–1982')
     expect(yearsLabel({ deathYear: 1982 })).toBe('d. 1982')
   })
