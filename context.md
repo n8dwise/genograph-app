@@ -3,8 +3,10 @@
 Rebuild of `../genograph` (v1, JointJS) as a mobile-first, modular PWA.
 Clinical genogram tool for a therapist; 100% client-side, data never leaves the device.
 
-- **GitHub:** n8dwise/genograph-app (private)
-- **Live:** not hosted yet (repo private). To deploy: enable Pages (source: GitHub Actions) and set repo variable `DEPLOY_PAGES=true`.
+- **GitHub:** n8dwise/genograph-app (public — code only; no client data ever goes in the repo)
+- **Live:** https://n8dwise.github.io/genograph-app/ — deployed by CI on every push to `main`
+  (repo variable `DEPLOY_PAGES=true`). Saved genograms are tied to this address; changing
+  hosts means users must export/import their data.
 - **Plan & decisions:** `PLAN.md` — read it first
 - **v1 reference:** `../genograph` (layout rules, sample families in `src/families/`)
 
