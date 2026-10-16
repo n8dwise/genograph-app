@@ -26,6 +26,7 @@ export default defineConfig(({ command, isPreview }) => ({
   ],
   test: {
     include: ['src/**/*.test.ts'],
+    exclude: ['e2e/**'],
     environment: 'node',
   },
 }))
