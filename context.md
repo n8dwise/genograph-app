@@ -9,7 +9,7 @@ Clinical genogram tool for a therapist; 100% client-side, data never leaves the 
 - **v1 reference:** `../genograph` (layout rules, sample families in `src/families/`)
 
 ## Stack
-TypeScript · Svelte 5 · Vite · vite-plugin-pwa · Vitest · Zod · idb-keyval. All free; $0 budget.
+TypeScript · Svelte 5 · Vite · vite-plugin-pwa · Vitest · Playwright · Zod · idb-keyval. All free; $0 budget.
 
 ## Commands
 ```
@@ -17,7 +17,8 @@ npm run dev     # dev server (localhost:5173)
 npm test        # vitest
 npm run check   # svelte-check + tsc
 npm run build   # production build → dist/
-npm run ci      # check + test + build (what CI runs)
+npm run e2e     # Playwright browser tests (desktop + phone), uses installed Chrome
+npm run ci      # check + test + build
 ```
 
 ## Layout (target — see PLAN.md → Architecture)
@@ -57,7 +58,24 @@ Layers only depend downward. Layout must stay free of DOM/Svelte so it's unit-te
     writes nothing to the device until `save()` (for the shared-device question).
     Framework-free; UI subscribes via `session.subscribe`.
   - `io/json.ts`: import any supported format (v2 / v1 / person list) with validation; export.
-- **Next: Phase 3** — real renderer (clinical symbols, connectors, pan/pinch-zoom, hit-testing).
+- **Phase 3 (renderer):** done.
+  - `render/Diagram.svelte`: static SVG — McGoldrick symbols (square/circle/diamond for
+    non-binary, rounded square for unknown), deceased X, index double outline, age inside,
+    name + years below; partner U-lines (dash by type, slashes for separated/divorced,
+    color by quality); drops (adopted dashed, foster dotted), twin forks + identical bar;
+    emotional relationships and bonds as curves that arc over symbols. Also renders
+    server-side (used by tests; Phase 5 image export).
+  - `render/Canvas.svelte`: pan (drag), pinch / ctrl+wheel / buttons / +− to zoom, fit,
+    tap to select (data-kind/data-id hit targets with fat invisible strokes), keyboard
+    Tab/Enter/Esc/arrows. Floating zoom buttons.
+  - `render/paths.ts`, `render/viewport.ts`: pure geometry, unit-tested.
+  - Colors are CSS tokens in `app.css` with a dark-mode set. Use `style:` (not SVG
+    attributes) for per-line colors — class rules override presentation attributes.
+  - `e2e/`: Playwright smoke tests (tap, drag, zoom, keyboard, no sideways scroll) on
+    desktop + Pixel 7 profiles; run in CI.
+  - App.svelte is still a demo shell (sample picker + selection readout).
+- **Next: Phase 4** — editing UX (tap-person action sheet, bottom sheet/side panel forms,
+  My Genograms home, first-run "who's the client?", drag-to-pin).
 
 ## Layout conventions (decided in Phase 1)
 - Partner lines are a "U" under the symbols; names sit below that band, so lines never cross names.
@@ -67,9 +85,10 @@ Layers only depend downward. Layout must stay free of DOM/Svelte so it's unit-te
 - Birth order (oldest left) is enforced within each sibling group; someone who married
   into another sibling group sits with their partner.
 - `family.children` order *is* birth order — the store must keep it sorted.
-- Known gaps: emotional-relationship and bond lines are straight debug lines (Phase 6 curves them);
+- Known gaps: emotional-relationship lines use basic color/dash styles (Phase 6 adds glyph patterns);
   in-law ancestors more than one generation up may get long connectors.
 
 ## Debugging layouts
-`npm run dev` → pick a sample. For PNGs: write `debugSvg(...)` output to `.debug/` (git-ignored)
-and screenshot with headless Chrome.
+`npm run dev` → pick a sample, or `?sample=<name>`. For PNGs: `npm run build`, `vite preview`,
+then headless Chrome `--screenshot` into `.debug/` (git-ignored). Headless Chrome can't go below
+500px wide — for phone width, load the app in a 390px iframe.

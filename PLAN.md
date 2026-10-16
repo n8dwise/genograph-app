@@ -1,6 +1,6 @@
 # Genograph v2 — Rebuild Plan
 
-Status: **approved direction** (2026-10-15). Phases 0–2 done; trim/annotate freely.
+Status: **approved direction** (2026-10-15). Phases 0–3 done; trim/annotate freely.
 
 ## Goal
 
