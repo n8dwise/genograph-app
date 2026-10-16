@@ -4,8 +4,8 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // GitHub Pages serves the project at /genograph-app/; dev server runs at root.
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/genograph-app/' : '/',
+export default defineConfig(({ command, isPreview }) => ({
+  base: command === 'build' || isPreview ? '/genograph-app/' : '/',
   plugins: [
     svelte(),
     VitePWA({

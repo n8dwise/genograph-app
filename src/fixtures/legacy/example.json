@@ -1,0 +1,35 @@
+{
+  "meta": { "title": "Complex Family Sample" },
+  "persons": [
+    { "id": 1,  "name": "Alex",       "sex": "M", "age": 38, "isIndexPerson": true },
+    { "id": 2,  "name": "Richard",    "sex": "M", "age": 65 },
+    { "id": 3,  "name": "Carol",      "sex": "F", "age": 62 },
+    { "id": 4,  "name": "Susan",      "sex": "F", "age": 55 },
+    { "id": 5,  "name": "Megan",      "sex": "F", "age": 41 },
+    { "id": 6,  "name": "Tyler",      "sex": "M", "age": 22 },
+    { "id": 7,  "name": "Jordan",     "sex": "F", "age": 35 },
+    { "id": 8,  "name": "Leo",        "sex": "M", "age": 10 },
+    { "id": 9,  "name": "Nina",       "sex": "F", "age": 7 },
+    { "id": 10, "name": "George",     "sex": "M", "age": 92, "deceased": true },
+    { "id": 11, "name": "Martha",     "sex": "F", "age": 88, "deceased": true },
+    { "id": 12, "name": "Don",        "sex": "M", "age": 44 },
+    { "id": 13, "name": "Aunt Lisa",  "sex": "F", "age": 59 },
+    { "id": 14, "name": "Dr. Park",   "sex": "F", "age": 46 },
+    { "id": 15, "name": "River",      "sex": "O", "age": 13 }
+  ],
+  "unions": [
+    { "id": "u1", "partners": [10, 11], "type": "married",    "status": "active",   "children": [2, 13] },
+    { "id": "u2", "partners": [2,  3],  "type": "married",    "status": "divorced", "quality": "red",    "children": [1, 5] },
+    { "id": "u3", "partners": [2,  4],  "type": "married",    "status": "active",   "quality": "green",  "children": [6] },
+    { "id": "u4", "partners": [1,  7],  "type": "married",    "status": "active",   "quality": "green",  "children": [8, 9, 15] },
+    { "id": "u5", "partners": [5, 12],  "type": "cohabiting", "status": "active",   "quality": "yellow" }
+  ],
+  "familyRelations": [
+    { "id": "fr1", "from": 6, "to": 1, "type": "half-sibling", "quality": "yellow" },
+    { "id": "fr2", "from": 6, "to": 5, "type": "half-sibling", "quality": "red" }
+  ],
+  "bonds": [
+    { "id": "b1", "from": 14, "to": 1, "type": "counselor", "quality": "green" },
+    { "id": "b2", "from": 15, "to": 14, "type": "mentor",   "quality": "yellow" }
+  ]
+}

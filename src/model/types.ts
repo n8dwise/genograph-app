@@ -52,6 +52,7 @@ export interface Family {
   /** 0–2 parents. Fewer than 2 means the missing parent(s) are implied (off-chart). */
   parents: Id[]
   partnershipId?: Id
+  /** Birth order, oldest first. */
   children: ChildLink[]
 }
 
