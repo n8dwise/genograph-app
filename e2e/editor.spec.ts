@@ -2,8 +2,9 @@ import { expect, test, type Page } from '@playwright/test'
 
 // End-to-end editing: first run → build a small family → undo → persists across reload.
 
+// Each person's accessible label starts with their name ("Leo" or "Leo, age 10").
 const personNamed = (page: Page, name: string) =>
-  page.locator('g.person').filter({ has: page.locator('text.name', { hasText: new RegExp(`^${name}$`) }) })
+  page.locator(`g.person[aria-label="${name}"], g.person[aria-label^="${name},"]`)
 const panel = (page: Page) => page.locator('aside.panel')
 
 async function select(page: Page, isMobile: boolean, name: string) {
@@ -67,7 +68,7 @@ test('build a family from scratch', async ({ page, isMobile }) => {
   // Edit details live
   await select(page, isMobile, 'Leo')
   await panel(page).getByLabel('Age').fill('10')
-  const leoAge = personNamed(page, 'Leo').locator('text.age:not(.unknown-mark)')
+  const leoAge = personNamed(page, 'Leo').locator('tspan.age')
   await expect(leoAge).toHaveText('10')
 
   // Undo the age edit and the child

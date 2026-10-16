@@ -6,9 +6,11 @@
   import type { Genogram } from '../model/types'
   import {
     ageLabel, BOND_LABELS, bondOpacity, curveBetween, curveMidpoint, dropPath, dropStyle,
-    familyTrunk, identicalTwinBars, partnerPath, partnerStyle, relationshipStyle, statusMarks,
-    truncate, yearsLabel,
+    familyTrunk, fitName, identicalTwinBars, partnerPath, partnerStyle, relationshipStyle, statusMarks,
+    yearsLabel,
   } from './paths'
+  import type { PersonBox } from '../layout/types'
+  import type { Sex } from '../model/types'
   import type { Selection } from './selection'
 
   interface Props {
@@ -19,6 +21,14 @@
     drag?: { id: string; dx: number; dy: number } | null
   }
   let { g, res, selected = null, drag = null }: Props = $props()
+
+  /** Where the small deceased X goes: bottom-right, just inside each shape. */
+  function cornerMark(sex: Sex, b: PersonBox) {
+    const s = b.size
+    if (sex === 'F') return { x: b.cx + s * 0.31, y: b.cy + s * 0.31 }
+    if (sex === 'X') return { x: b.cx + s * 0.19, y: b.cy + s * 0.19 }
+    return { x: b.x + s - 9, y: b.y + s - 9 }
+  }
 
   const partnerships = $derived(new Map(g.partnerships.map(p => [p.id, p])))
   const isSelected = (kind: Selection['kind'], id: string) => selected?.kind === kind && selected.id === id
@@ -122,6 +132,9 @@
         {@const s = b.size}
         {@const age = ageLabel(p)}
         {@const years = yearsLabel(p)}
+        {@const shape = p.sex === 'F' ? 'circle' : p.sex === 'X' ? 'diamond' : 'square'}
+        {@const fit = fitName(p.name || 'Unnamed', shape, s, age ? 1 : 0)}
+        {@const total = fit.lines.length + (age ? 1 : 0)}
         <g
           class="person"
           class:support={b.support}
@@ -134,10 +147,10 @@
           tabindex="0"
           aria-label={[p.name || 'Unnamed', age && `age ${age}`, p.deceased && 'deceased'].filter(Boolean).join(', ')}
         >
-          <!-- Invisible tap targets: symbol and name label. The band between them
+          <!-- Invisible tap targets: symbol and years label. The band between them
                stays free so partner lines and spines remain tappable. -->
           <rect class="hit-area" x={b.x - 8} y={b.y - 8} width={s + 16} height={s + 14} />
-          <rect class="hit-area" x={b.cx - 44} y={b.labelY - 2} width="88" height="32" />
+          {#if years}<rect class="hit-area" x={b.cx - 38} y={b.labelY - 2} width="76" height="16" />{/if}
 
           {#if isSelected('person', p.id)}
             <rect class="selection-ring" x={b.x - 9} y={b.y - 9} width={s + 18} height={s + 18} rx="10" />
@@ -156,18 +169,26 @@
             <rect class="symbol" x={b.x} y={b.y} width={s} height={s} rx={p.sex === '?' ? 8 : 0} />
           {/if}
 
+          <!-- Small corner marks keep the center free for the name. -->
           {#if p.deceased}
-            {@const i = p.sex === 'M' ? 4 : 8}
-            <path class="deceased" d="M{b.x + i} {b.y + i}L{b.x + s - i} {b.y + s - i}M{b.x + s - i} {b.y + i}L{b.x + i} {b.y + s - i}" />
-          {:else if age}
-            <text class="age" x={b.cx} y={b.cy} text-anchor="middle" dominant-baseline="central">{age}</text>
-          {:else if p.sex === '?'}
-            <text class="age unknown-mark" x={b.cx} y={b.cy} text-anchor="middle" dominant-baseline="central">?</text>
+            {@const m = cornerMark(p.sex, b)}
+            <path class="deceased" d="M{m.x - 5} {m.y - 5}L{m.x + 5} {m.y + 5}M{m.x + 5} {m.y - 5}L{m.x - 5} {m.y + 5}" />
+          {/if}
+          {#if p.sex === '?'}
+            <text class="unknown-mark" x={b.x + s - 9} y={b.y + 13} text-anchor="middle">?</text>
           {/if}
 
-          <text class="name" x={b.cx} y={b.labelY + 11} text-anchor="middle">{truncate(p.name || 'Unnamed', 15)}</text>
+          <text class="inside" x={b.cx} text-anchor="middle" dominant-baseline="central">
+            {#each fit.lines as line, i (i)}
+              <tspan class="name" x={b.cx} y={b.cy + (i - (total - 1) / 2) * fit.lineHeight} style:font-size="{fit.fontSize}px">{line}</tspan>
+            {/each}
+            {#if age}
+              <tspan class="age" x={b.cx} y={b.cy + (fit.lines.length - (total - 1) / 2) * fit.lineHeight}>{age}</tspan>
+            {/if}
+          </text>
+
           {#if years}
-            <text class="years" x={b.cx} y={b.labelY + 25} text-anchor="middle">{years}</text>
+            <text class="years" x={b.cx} y={b.labelY + 10} text-anchor="middle">{years}</text>
           {/if}
         </g>
       {/if}
@@ -250,15 +271,25 @@
     stroke-width: 1.75;
   }
 
-  .age {
-    font-size: 14px;
+  .inside {
     fill: var(--ink);
+    pointer-events: none;
   }
 
   .name {
-    font-size: 12px;
-    font-weight: 500;
-    fill: var(--ink);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .age {
+    font-size: 11px;
+    fill: var(--ink-muted);
+  }
+
+  .unknown-mark {
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--ink-muted);
   }
 
   .years {

@@ -3,7 +3,7 @@ import type { ChildKind, Id } from '../model/types'
 export interface LayoutOptions {
   /** Square/circle symbol edge length. */
   symbolSize: number
-  /** Horizontal space reserved per person (symbol + name label width). */
+  /** Horizontal space reserved per person (symbol + breathing room for the years line). */
   slotWidth: number
   /** Gap between partners inside a couple/multi-partner unit. */
   partnerGap: number
@@ -15,9 +15,9 @@ export interface LayoutOptions {
   partnerDrop: number
   /** Extra depth per nesting level for non-adjacent partners. */
   nestStep: number
-  /** Distance from symbol bottom to name label top (holds partner lines). */
+  /** Distance from symbol bottom to the years label (holds partner lines). */
   labelOffset: number
-  /** Height reserved for the name label. */
+  /** Height reserved for the years label under the symbol. */
   labelHeight: number
   /** Vertical space between label bottom and next row's symbols. */
   rowGap: number
@@ -34,16 +34,18 @@ export interface LayoutOptions {
 }
 
 export const defaultLayoutOptions: LayoutOptions = {
-  symbolSize: 40,
-  slotWidth: 96,
+  // Names sit inside the symbols, so symbols are large and only a short
+  // birth–death line sits below (under the partner-line band).
+  symbolSize: 64,
+  slotWidth: 84,
   partnerGap: 16,
-  unitGap: 24,
-  blockGap: 44,
+  unitGap: 20,
+  blockGap: 40,
   partnerDrop: 12,
   nestStep: 7,
-  labelOffset: 30,
-  labelHeight: 30,
-  rowGap: 48,
+  labelOffset: 28,
+  labelHeight: 14,
+  rowGap: 44,
   siblingBarOffset: 22,
   trackGap: 10,
   impliedStub: 12,
@@ -60,7 +62,7 @@ export interface PersonBox {
   /** Symbol center. */
   cx: number
   cy: number
-  /** Top of the name label (label is centered on cx). */
+  /** Top of the years label under the symbol (centered on cx). */
   labelY: number
   rank: number
   /** True for support figures drawn in the row under the family. */
